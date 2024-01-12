@@ -3,6 +3,7 @@ import numpy as np
 import requests
 import cx_Oracle
 import re
+import ast
 
 def fetch_fasta_sequence(uniprot_accession,begin,end):
     fasta_url = "https://rest.uniprot.org/uniprotkb/"+uniprot_accession+".fasta"
@@ -105,18 +106,10 @@ def fetch_aligned_regions(uniprot_accession, pdb_code):
         print(f"Failed to retrieve data from RCSB GraphQL API. Status code: {response.status_code}")
     return(None)
 
-
-
-def getPDBPocketResidueNumbers(pdb_code,pocket_number,chain):
-    query=""""""
-    cur.execute(query)
-    return cur.fetchall()
-
 #Replace 'your_file_path' with the actual path to your file
-file_path = 'data.csv'
+file_path = 'data_generic.csv'
 # Read the data into a Pandas DataFrame
 df = pd.read_csv(file_path, delimiter=';')
-cur=connectDB()
 
 sequencefile=open("sequences.fa","w")
 residuelistfile=open("residueList.tsv","w")
@@ -125,7 +118,7 @@ residuelistfile.write("Accession;Residues;SCOP2\n")
 for index, row in df.iterrows():
     accession = row['Accession']
     pdb_code = row['PDBCode']
-    pocket_number = row['PocketNumber']
+    pdb_str_res_num = ast.literal_eval(row['ResidueList'])
     #1S3B,
     # if accession=='P07900':
     print(accession)
@@ -133,7 +126,6 @@ for index, row in df.iterrows():
     scop2_list=seq_range[3]
     if(seq_range!=None):
         fasta=fetch_fasta_sequence(accession,seq_range[1],seq_range[2])
-        pdb_str_res_num=getPDBPocketResidueNumbers(pdb_code,pocket_number,seq_range[0])
         if(len(pdb_str_res_num)>5):
             positions=[int(res[0]) for res in pdb_str_res_num]
             diffs=np.diff(positions)
